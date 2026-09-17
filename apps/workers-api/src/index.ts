@@ -46,7 +46,7 @@ app.use(
 app.use("*", async (c, next) => {
   const url = new URL(c.req.url);
   const baseUrl = `${url.protocol}//${url.host}`;
-  const productionUrl = c.env.AUTH_PRODUCTION_URL ?? baseUrl;
+  const productionUrl = c.env.AUTH_PRODUCTION_URL || baseUrl;
 
   const db = createDb(c.env.DB);
   const auth = initAuth({
@@ -54,8 +54,12 @@ app.use("*", async (c, next) => {
     baseUrl,
     productionUrl,
     secret: c.env.AUTH_SECRET,
-    discordClientId: c.env.AUTH_DISCORD_ID,
-    discordClientSecret: c.env.AUTH_DISCORD_SECRET,
+    googleClientId: c.env.AUTH_GOOGLE_ID,
+    googleClientSecret: c.env.AUTH_GOOGLE_SECRET,
+    trustedOrigins: [
+      "http://localhost:5173",
+      ...(c.env.WEB_APP_URL ? [c.env.WEB_APP_URL] : []),
+    ],
   });
 
   c.set("db", db);

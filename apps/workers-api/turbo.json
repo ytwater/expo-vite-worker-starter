@@ -2,12 +2,20 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    "typegen": {
+      "cache": false,
+      "outputs": ["worker-configuration.d.ts"]
+    },
     "dev": {
+      "dependsOn": ["typegen"],
       "persistent": true,
       "interactive": true
     },
+    "typecheck": {
+      "dependsOn": ["typegen", "^topo", "^build"]
+    },
     "deploy": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["typegen", "^build"],
       "cache": false
     }
   }

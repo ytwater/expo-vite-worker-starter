@@ -36,7 +36,7 @@ export const auth = betterAuth({
     expo(),
   ],
   socialProviders: {
-    discord: {
+    google: {
       clientId: "1234567890",
       clientSecret: "1234567890",
     },

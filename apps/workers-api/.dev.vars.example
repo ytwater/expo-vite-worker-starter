@@ -1,9 +1,13 @@
-# Secrets for local wrangler dev (copy to .dev.vars)
+# Single source of truth for local Worker auth secrets.
+# Copy to .dev.vars (gitignored). Used by wrangler dev + `pnpm typegen`.
 # Generate AUTH_SECRET with: openssl rand -base64 32
 
 AUTH_SECRET=supersecret
-AUTH_DISCORD_ID=
-AUTH_DISCORD_SECRET=
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
 
 # Optional: public production URL for OAuth redirects (defaults to request origin)
-# AUTH_PRODUCTION_URL=https://diablo-4-character-scanner-api.your-subdomain.workers.dev
+AUTH_PRODUCTION_URL=
+
+# Optional: production Vite web app origin (trusted by Better Auth CORS)
+WEB_APP_URL=

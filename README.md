@@ -3,9 +3,10 @@
 Turborepo monorepo (from [create-t3-turbo](https://github.com/t3-oss/create-t3-turbo)) with:
 
 - **Expo** — mobile client
+- **Vite** (`apps/web`) — web SPA (Better Auth + oRPC)
 - **Cloudflare Worker** (`apps/workers-api`) — Hono API host
 - **oRPC** — typesafe RPC (`/api/rpc`)
-- **Better Auth** — Discord + Expo (`/api/auth/*`)
+- **Better Auth** — Google + Expo (`/api/auth/*`)
 - **Cloudflare D1** — SQLite via Drizzle
 
 > Node `^22.21.0`, pnpm `^10.19.0` — see [`package.json#engines`](./package.json).
@@ -15,6 +16,7 @@ Turborepo monorepo (from [create-t3-turbo](https://github.com/t3-oss/create-t3-t
 ```text
 apps
   ├─ expo           Expo SDK 54 (oRPC + Better Auth clients)
+  ├─ web            Vite + React SPA (oRPC + Better Auth)
   └─ workers-api    Cloudflare Worker (Hono) → /api/rpc, /api/auth
 packages
   ├─ api            oRPC router / procedures
@@ -28,9 +30,9 @@ packages
 
 1. [Cloudflare account](https://dash.cloudflare.com/sign-up)
 2. Wrangler logged in: `pnpm -F @acme/workers-api exec wrangler login`
-3. Discord OAuth app ([Better Auth Discord docs](https://www.better-auth.com/docs/authentication/discord))
-   - Callback URL (local): `http://localhost:8787/api/auth/callback/discord`
-   - Callback URL (prod): `https://<your-worker>.workers.dev/api/auth/callback/discord`
+3. Google OAuth client ([Better Auth Google docs](https://www.better-auth.com/docs/authentication/google))
+   - Callback URL (local): `http://localhost:8787/api/auth/callback/google`
+   - Callback URL (prod): `https://<your-worker>.workers.dev/api/auth/callback/google`
 
 ## Setup
 
@@ -39,20 +41,28 @@ packages
 ```bash
 pnpm i
 
-cp .env.example .env
 cp apps/workers-api/.dev.vars.example apps/workers-api/.dev.vars
 ```
 
-Fill in both files:
+Fill in `apps/workers-api/.dev.vars` (single source of truth for Worker auth secrets):
 
 | Var | Purpose |
 | --- | --- |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
-| `AUTH_DISCORD_ID` | Discord client ID |
-| `AUTH_DISCORD_SECRET` | Discord client secret |
+| `AUTH_GOOGLE_ID` | Google OAuth client ID |
+| `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
 | `AUTH_PRODUCTION_URL` | Optional. Public Worker URL for OAuth redirects (defaults to request origin) |
+| `WEB_APP_URL` | Optional. Production web origin trusted by Better Auth |
 
-`.dev.vars` is what **wrangler** reads in local/dev. Root `.env` is for tooling (auth schema generate, etc.).
+Wrangler reads `.dev.vars` for local `wrangler dev` and for `pnpm typegen` Env bindings. Do **not** duplicate these in a root `.env`.
+
+After changing `wrangler.jsonc` or adding keys to `.dev.vars`, run:
+
+```bash
+pnpm typegen
+```
+
+`typecheck` / `dev` for `@acme/workers-api` also run typegen automatically via Turbo.
 
 ### 2. Provision D1
 
@@ -118,10 +128,13 @@ pnpm db:migrate:local   # and :remote when ready
 
 ```bash
 pnpm dev:api              # Worker on http://localhost:8787
+pnpm dev:web              # Vite SPA on http://localhost:5173
 pnpm -F @acme/expo dev    # Expo
 ```
 
-Expo resolves the API as `http://<lan-ip>:8787` via [`apps/expo/src/utils/base-url.ts`](./apps/expo/src/utils/base-url.ts).
+Copy [`apps/web/.env.example`](./apps/web/.env.example) → `apps/web/.env` (`VITE_API_URL=http://localhost:8787`).
+
+Expo resolves the API as `http://<lan-ip>:8787` via [`apps/expo/src/utils/base-url.ts`](./apps/expo/src/utils/base-url.ts). The web app uses `VITE_API_URL` and Google OAuth redirects back to `http://localhost:5173/` after the Worker callback.
 
 Quick checks:
 
@@ -139,6 +152,7 @@ curl -X POST http://localhost:8787/api/rpc/post/all \
 | Router / procedures | [`packages/api`](./packages/api) |
 | HTTP host | [`apps/workers-api`](./apps/workers-api) → `/api/rpc`, `/api/auth/*` |
 | Expo client | [`apps/expo/src/utils/api.tsx`](./apps/expo/src/utils/api.tsx) |
+| Web client | [`apps/web/src/lib/api.ts`](./apps/web/src/lib/api.ts) |
 
 ```ts
 import { orpc } from "~/utils/api";
@@ -157,15 +171,15 @@ pnpm db:migrate:remote
 pnpm -F @acme/workers-api deploy
 
 pnpm -F @acme/workers-api exec wrangler secret put AUTH_SECRET
-pnpm -F @acme/workers-api exec wrangler secret put AUTH_DISCORD_ID
-pnpm -F @acme/workers-api exec wrangler secret put AUTH_DISCORD_SECRET
+pnpm -F @acme/workers-api exec wrangler secret put AUTH_GOOGLE_ID
+pnpm -F @acme/workers-api exec wrangler secret put AUTH_GOOGLE_SECRET
 # optional:
 # pnpm -F @acme/workers-api exec wrangler secret put AUTH_PRODUCTION_URL
 ```
 
 Then:
 
-1. Set Discord OAuth redirect to `https://<worker>.workers.dev/api/auth/callback/discord`
+1. Set Google OAuth redirect to `https://<worker>.workers.dev/api/auth/callback/google`
 2. Point Expo production `getBaseUrl()` at that Worker URL
 
 ## Expo (stores)
@@ -177,11 +191,13 @@ Use [EAS Build / Submit](https://docs.expo.dev/distribution/introduction) as usu
 | Script | What it does |
 | --- | --- |
 | `pnpm dev:api` | `wrangler dev` for `@acme/workers-api` |
+| `pnpm dev:web` | Vite SPA for `@acme/web` |
 | `pnpm db:generate` | Drizzle → SQL in `packages/db/drizzle` |
 | `pnpm db:migrate:local` | Apply migrations to local D1 |
 | `pnpm db:migrate:remote` | Apply migrations to remote D1 |
 | `pnpm db:studio` | Drizzle Studio (local SQLite file config) |
 | `pnpm auth:generate` | Regen Better Auth tables → `auth-schema.ts` |
+| `pnpm typegen` | `wrangler types` → `apps/workers-api/worker-configuration.d.ts` |
 
 ## References
 
