@@ -1,6 +1,6 @@
-# Diablo 4 Character Scanner
+# Expo Vite Worker Starter
 
-Turborepo monorepo (from [create-t3-turbo](https://github.com/t3-oss/create-t3-turbo)) with:
+Turborepo monorepo starter with:
 
 - **Expo** — mobile client
 - **Vite** (`apps/web`) — web SPA (Better Auth + oRPC)
@@ -8,6 +8,8 @@ Turborepo monorepo (from [create-t3-turbo](https://github.com/t3-oss/create-t3-t
 - **oRPC** — typesafe RPC (`/api/rpc`)
 - **Better Auth** — Google + Expo (`/api/auth/*`)
 - **Cloudflare D1** — SQLite via Drizzle
+
+> Based on [create-t3-turbo](https://github.com/t3-oss/create-t3-turbo) (MIT, Julius Marminge) — migrated to Cloudflare Workers + oRPC.
 
 > Node `^22.21.0`, pnpm `^10.19.0` — see [`package.json#engines`](./package.json).
 
@@ -86,17 +88,17 @@ One-time per account/environment:
 
 ```bash
 # 1. Create the database
-pnpm -F @acme/workers-api exec wrangler d1 create diablo-scanner-db
+pnpm -F @acme/workers-api exec wrangler d1 create my-app-db
 ```
 
 Wrangler prints something like:
 
 ```text
-✅ Successfully created DB 'diablo-scanner-db'
+✅ Successfully created DB 'my-app-db'
 
 [[d1_databases]]
 binding = "DB"
-database_name = "diablo-scanner-db"
+database_name = "my-app-db"
 database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 

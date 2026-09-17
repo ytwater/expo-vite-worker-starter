@@ -89,7 +89,7 @@ app.all("/api/rpc/*", async (c) => {
 
 app.get("/", (c) =>
   c.json({
-    name: "diablo-4-character-scanner-api",
+    name: "my-app-api",
     status: "ok",
   }),
 );

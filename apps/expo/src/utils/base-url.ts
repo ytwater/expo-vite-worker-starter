@@ -17,7 +17,7 @@ export const getBaseUrl = () => {
   const localhost = debuggerHost?.split(":")[0];
 
   if (!localhost) {
-    // return "https://diablo-4-character-scanner-api.your-subdomain.workers.dev";
+    // return "https://my-app-api.your-subdomain.workers.dev";
     throw new Error(
       "Failed to get localhost. Please point to your production server.",
     );

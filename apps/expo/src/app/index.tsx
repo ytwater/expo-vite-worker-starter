@@ -159,7 +159,7 @@ export default function Index() {
       <Stack.Screen options={{ title: "Home Page" }} />
       <View className="bg-background h-full w-full p-4">
         <Text className="text-foreground pb-2 text-center text-5xl font-bold">
-          Create <Text className="text-primary">T3</Text> Turbo
+          Expo + Vite + <Text className="text-primary">Worker</Text>
         </Text>
 
         <MobileAuth />
