@@ -4,11 +4,13 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy } from "better-auth/plugins";
 
-import { db } from "@acme/db/client";
+import type { DB } from "@acme/db/client";
+import * as schema from "@acme/db/schema";
 
 export function initAuth<
   TExtraPlugins extends BetterAuthPlugin[] = [],
 >(options: {
+  db: DB;
   baseUrl: string;
   productionUrl: string;
   secret: string | undefined;
@@ -18,8 +20,9 @@ export function initAuth<
   extraPlugins?: TExtraPlugins;
 }) {
   const config = {
-    database: drizzleAdapter(db, {
-      provider: "pg",
+    database: drizzleAdapter(options.db, {
+      provider: "sqlite",
+      schema,
     }),
     baseURL: options.baseUrl,
     secret: options.secret,

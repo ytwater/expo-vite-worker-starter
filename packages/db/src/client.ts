@@ -1,10 +1,12 @@
-import { sql } from "@vercel/postgres";
-import { drizzle } from "drizzle-orm/vercel-postgres";
+import { drizzle } from "drizzle-orm/d1";
 
 import * as schema from "./schema";
 
-export const db = drizzle({
-  client: sql,
-  schema,
-  casing: "snake_case",
-});
+export function createDb(d1: D1Database) {
+  return drizzle(d1, {
+    schema,
+    casing: "snake_case",
+  });
+}
+
+export type DB = ReturnType<typeof createDb>;

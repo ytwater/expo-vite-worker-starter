@@ -1,7 +1,8 @@
+import type { RouterClient } from "@orpc/server";
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryClient } from "@tanstack/react-query";
-import { createTRPCClient, httpBatchLink, loggerLink } from "@trpc/client";
-import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import superjson from "superjson";
 
 import type { AppRouter } from "@acme/api";
 
@@ -16,35 +17,25 @@ export const queryClient = new QueryClient({
   },
 });
 
-/**
- * A set of typesafe hooks for consuming your API.
- */
-export const trpc = createTRPCOptionsProxy<AppRouter>({
-  client: createTRPCClient({
-    links: [
-      loggerLink({
-        enabled: (opts) =>
-          process.env.NODE_ENV === "development" ||
-          (opts.direction === "down" && opts.result instanceof Error),
-        colorMode: "ansi",
-      }),
-      httpBatchLink({
-        transformer: superjson,
-        url: `${getBaseUrl()}/api/trpc`,
-        headers() {
-          const headers = new Map<string, string>();
-          headers.set("x-trpc-source", "expo-react");
+const link = new RPCLink({
+  url: `${getBaseUrl()}/api/rpc`,
+  headers() {
+    const headers = new Map<string, string>();
+    headers.set("x-orpc-source", "expo-react");
 
-          const cookies = authClient.getCookie();
-          if (cookies) {
-            headers.set("Cookie", cookies);
-          }
-          return headers;
-        },
-      }),
-    ],
-  }),
-  queryClient,
+    const cookies = authClient.getCookie();
+    if (cookies) {
+      headers.set("Cookie", cookies);
+    }
+    return Object.fromEntries(headers);
+  },
 });
+
+export const client: RouterClient<AppRouter> = createORPCClient(link);
+
+/**
+ * A set of typesafe helpers for consuming your API with TanStack Query.
+ */
+export const orpc = createTanstackQueryUtils(client);
 
 export type { RouterInputs, RouterOutputs } from "@acme/api";

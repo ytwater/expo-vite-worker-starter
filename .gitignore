@@ -53,3 +53,9 @@ dist/
 
 # tanstack
 .tanstack
+
+# cloudflare
+.wrangler
+.dev.vars
+packages/db/local.db
+packages/db/local.db-journal

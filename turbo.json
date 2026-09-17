@@ -32,9 +32,8 @@
     "//#clean": {
       "cache": false
     },
-    "push": {
-      "cache": false,
-      "interactive": true
+    "generate": {
+      "cache": false
     },
     "studio": {
       "cache": false,
@@ -46,19 +45,17 @@
     }
   },
   "globalEnv": [
-    "POSTGRES_URL",
     "AUTH_DISCORD_ID",
     "AUTH_DISCORD_SECRET",
-    "AUTH_REDIRECT_PROXY_URL",
+    "AUTH_PRODUCTION_URL",
     "AUTH_SECRET",
     "PORT"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_URL",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_TOKEN",
     "npm_lifecycle_event"
   ]
 }
